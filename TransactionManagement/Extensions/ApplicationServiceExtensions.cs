@@ -1,10 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TransactionManagement.Data;
+using TransactionManagement.DatabaseManager;
+using TransactionManagement.DatabaseManager.Interfaces;
+using TransactionManagement.Services;
+using TransactionManagement.Services.Interfaces;
 
 namespace TransactionManagement.Extensions
 {
     /// <summary>
-    /// Extension methods for configuring application services.
+    /// Static class for configuring application services.
     /// </summary>
     public static class ApplicationServiceExtensions
     {
@@ -18,6 +22,16 @@ namespace TransactionManagement.Extensions
         {
             services.AddDbContext<TransactionManagementDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+
+            services.AddSingleton(_ =>
+            {
+                var connectionString = configuration.GetConnectionString("DefaultConnection")!;
+
+                return new SqlConnectionFactory(connectionString);
+            });
+
+            services.AddScoped<ITransactionService, TransactionService>();
+            services.AddScoped<ITransactionManager, TransactionManager>();
 
             return services;
         }
