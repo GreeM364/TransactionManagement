@@ -62,5 +62,17 @@ namespace TransactionManagement.DatabaseManager
 
             return existingTransactionIds.ToList();
         }
+
+        public async Task<List<Transaction>> GetAllTransactionsAsync(CancellationToken cancellationToken)
+        {
+            await using var connection = _sqlConnectionFactory.Create();
+            await connection.OpenAsync(cancellationToken);
+
+            var sql = @"SELECT * FROM Transactions";
+
+            var transactions = await connection.QueryAsync<Transaction>(sql);
+
+            return transactions.ToList();
+        }
     }
 }

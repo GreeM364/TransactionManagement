@@ -1,4 +1,5 @@
-﻿using TransactionManagement.DatabaseManager.Interfaces;
+﻿using System.Globalization;
+using TransactionManagement.DatabaseManager.Interfaces;
 using TransactionManagement.Entities;
 using TransactionManagement.Helpers;
 using TransactionManagement.Models.Requests;
@@ -35,6 +36,17 @@ namespace TransactionManagement.Services
             return transactionsResponse;
         }
 
+        public async Task<List<TransactionResponse>> GetTransactionsForDateAsync(int year, string? month, CancellationToken cancellationToken)
+        {
+            var transactions = await _transactionManager.GetAllTransactionsAsync(cancellationToken);
+
+            transactions = FilterTransactionsByDate(transactions, year, month);
+
+            var transactionsResponse = Mapper.TransactionToTransactionResponse(transactions);
+
+            return transactionsResponse;
+        }
+
         private List<TransactionRequestScv> RemoveDuplicatesAndKeepLatest(List<TransactionRequestScv> transactions)
         {
             var uniqueTransactions = transactions
@@ -67,5 +79,31 @@ namespace TransactionManagement.Services
 
             return (insertedTransactions, updatedTransactions);
         }
+
+        private List<Transaction> FilterTransactionsByDate(List<Transaction> transactions, int year, string? month)
+        {
+            var filteredTransactions = transactions
+                .Select(transaction =>
+                {
+                    transaction.TransactionDate = DateTimeZoneConverter.ConvertToLocal(transaction.TransactionDate, transaction.Timezone);
+                    return transaction;
+                })
+                .Where(transaction => transaction.TransactionDate.Year == year);
+
+            if (!string.IsNullOrEmpty(month))
+            {
+                if (DateTime.TryParseExact(month, "MMMM", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedMonth))
+                {
+                    filteredTransactions = filteredTransactions.Where(transaction => transaction.TransactionDate.Month == parsedMonth.Month);
+                }
+                else
+                {
+                    throw new Exception(); //TODO: Create custom Exception
+                }
+            }
+
+            return filteredTransactions.ToList();
+        }
+
     }
 }

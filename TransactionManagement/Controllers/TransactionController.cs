@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TransactionManagement.Models.Responses;
 using TransactionManagement.Services.Interfaces;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TransactionManagement.Controllers
 {
@@ -26,6 +27,16 @@ namespace TransactionManagement.Controllers
             var downloadedTransactionData = await _transactionService.SaveAsync(file, cancellationToken);
 
             return StatusCode(StatusCodes.Status201Created, downloadedTransactionData);
+        }
+
+        [HttpGet("getAll/Client/{year}/{month?}")]
+        [Produces("application/json")]
+        [ProducesResponseType(typeof(List<TransactionResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetTransactions(int year, string? month, CancellationToken cancellationToken = default)
+        { 
+            var transactionsForDate = await _transactionService.GetTransactionsForDateAsync(year, month, cancellationToken);
+
+            return Ok(transactionsForDate);
         }
     }
 }
