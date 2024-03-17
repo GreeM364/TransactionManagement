@@ -1,6 +1,6 @@
 ﻿namespace TransactionManagement.Models.Requests
 {
-    public class TransactionRequestScv
+    public class TransactionRequestCsv
     {
         public string transaction_id { get; set; }
         public string name { get; set; }

@@ -19,17 +19,19 @@ namespace TransactionManagement.Services
 
         public async Task<List<TransactionResponse>> SaveAsync(IFormFile csvFile, CancellationToken cancellationToken)
         {
-            var transactionsRequestScv = CSVParser<TransactionRequestScv>.ParseCSV(csvFile);
+            var transactionsRequestScv = CSVParser<TransactionRequestCsv>.ParseCSV(csvFile);
 
             transactionsRequestScv = RemoveDuplicatesAndKeepLatest(transactionsRequestScv);
 
-            var transactionsToSave = Mapper.TransactionRequestScvToTransaction(transactionsRequestScv);
+            var transactionsToSave = Mapper.TransactionRequestCsvToTransaction(transactionsRequestScv);
 
             var (insertedTransactions, updatedTransactions) = 
                 await SplitTransactionsAsync(transactionsToSave, cancellationToken);
 
-            await _transactionManager.InsertTransactionsAsync(insertedTransactions, cancellationToken);
-            await _transactionManager.UpdateTransactionsAsync(updatedTransactions, cancellationToken);
+            await Task.WhenAll(
+                _transactionManager.InsertTransactionsAsync(insertedTransactions, cancellationToken),
+                _transactionManager.UpdateTransactionsAsync(updatedTransactions, cancellationToken)
+            );
 
             var transactionsResponse = Mapper.TransactionToTransactionResponse(insertedTransactions.Concat(updatedTransactions).ToList());
 
@@ -38,16 +40,19 @@ namespace TransactionManagement.Services
 
         public async Task<List<TransactionResponse>> GetTransactionsForDateAsync(int year, string? month, CancellationToken cancellationToken)
         {
-            var transactions = await _transactionManager.GetAllTransactionsAsync(cancellationToken);
+            var monthNumber = ParseMonth(month);
 
-            transactions = FilterTransactionsByDate(transactions, year, month);
+            var transactions = await _transactionManager.GetTransactionsByDateAsync(year, monthNumber, cancellationToken);
+
+            if (!transactions.Any())
+                return Enumerable.Empty<TransactionResponse>().ToList();
 
             var transactionsResponse = Mapper.TransactionToTransactionResponse(transactions);
 
             return transactionsResponse;
         }
 
-        private List<TransactionRequestScv> RemoveDuplicatesAndKeepLatest(List<TransactionRequestScv> transactions)
+        private List<TransactionRequestCsv> RemoveDuplicatesAndKeepLatest(List<TransactionRequestCsv> transactions)
         {
             var uniqueTransactions = transactions
                 .GroupBy(t => t.transaction_id)
@@ -80,30 +85,19 @@ namespace TransactionManagement.Services
             return (insertedTransactions, updatedTransactions);
         }
 
-        private List<Transaction> FilterTransactionsByDate(List<Transaction> transactions, int year, string? month)
+        private int? ParseMonth(string? month)
         {
-            var filteredTransactions = transactions
-                .Select(transaction =>
-                {
-                    transaction.TransactionDate = DateTimeZoneConverter.ConvertToLocal(transaction.TransactionDate, transaction.Timezone);
-                    return transaction;
-                })
-                .Where(transaction => transaction.TransactionDate.Year == year);
-
-            if (!string.IsNullOrEmpty(month))
+            if (month is not null)
             {
-                if (DateTime.TryParseExact(month, "MMMM", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedMonth))
+                if (!DateTime.TryParseExact(month, "MMMM", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedMonth))
                 {
-                    filteredTransactions = filteredTransactions.Where(transaction => transaction.TransactionDate.Month == parsedMonth.Month);
+                    throw new ArgumentException("Invalid month format", nameof(month));
                 }
-                else
-                {
-                    throw new Exception(); //TODO: Create custom Exception
-                }
+
+                return parsedMonth.Month;
             }
 
-            return filteredTransactions.ToList();
+            return null;
         }
-
     }
 }

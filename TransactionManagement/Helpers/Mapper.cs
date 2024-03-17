@@ -1,5 +1,6 @@
 ﻿using GeoTimeZone;
 using System.Globalization;
+using TimeZoneConverter;
 using TransactionManagement.Entities;
 using TransactionManagement.Models.Requests;
 using TransactionManagement.Models.Responses;
@@ -8,9 +9,9 @@ namespace TransactionManagement.Helpers
 {
     public static class Mapper
     {
-        public static List<Transaction> TransactionRequestScvToTransaction(List<TransactionRequestScv> transactionsRequestScv)
+        public static List<Transaction> TransactionRequestCsvToTransaction(List<TransactionRequestCsv> transactionsRequestScv)
         {
-            return transactionsRequestScv.Select(TransactionRequestScvToTransaction).ToList();
+            return transactionsRequestScv.Select(TransactionRequestCsvToTransaction).ToList();
         }
 
         public static List<TransactionResponse> TransactionToTransactionResponse(List<Transaction> transactions)
@@ -18,7 +19,7 @@ namespace TransactionManagement.Helpers
             return transactions.Select(TransactionToTransactionResponse).ToList();
         }
 
-        public static Transaction TransactionRequestScvToTransaction(TransactionRequestScv transactionRequestScv)
+        public static Transaction TransactionRequestCsvToTransaction(TransactionRequestCsv transactionRequestScv)
         {
             var (latitude, longitude) = GetLocationCoordinates(transactionRequestScv.client_location);
             var amount = ParseAmount(transactionRequestScv.amount);
@@ -72,7 +73,34 @@ namespace TransactionManagement.Helpers
 
         private static string GetClientTimeZone(double latitude, double longitude)
         {
-            return TimeZoneLookup.GetTimeZone(latitude, longitude).Result;
+            var timeZoneId = TimeZoneLookup.GetTimeZone(latitude, longitude).Result;
+
+            string standardTimeZoneId;
+
+            try
+            {
+                standardTimeZoneId = TZConvert.IanaToWindows(timeZoneId);
+            }
+            catch (InvalidTimeZoneException)
+            {
+                DateTime currentUtcTime = DateTime.UtcNow;
+
+                DateTime summerTimeTransition = new DateTime(currentUtcTime.Year, 3, 31, 1, 0, 0, DateTimeKind.Utc);
+                DateTime standardTimeTransition = new DateTime(currentUtcTime.Year, 10, 29, 3, 0, 0, DateTimeKind.Utc);
+
+                if (currentUtcTime >= summerTimeTransition && currentUtcTime < standardTimeTransition)
+                {
+                    // From March 31 Antarctica/Troll Time will be UTC+2 (CEST)
+                    standardTimeZoneId = "Central European Summer Time";
+                }
+                else
+                {
+                    // Otherwise, Antarctica/Troll Time is in standard time UTC+0
+                    standardTimeZoneId = "UTC";
+                }
+            }
+
+            return standardTimeZoneId;
         }
 
         private static DateTime ConvertToUtc(string transactionDate, string timeZone)
