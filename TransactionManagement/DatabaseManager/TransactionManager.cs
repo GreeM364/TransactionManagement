@@ -19,8 +19,8 @@ namespace TransactionManagement.DatabaseManager
             await using var connection = _sqlConnectionFactory.Create();
             await connection.OpenAsync(cancellationToken);
 
-            string sql =
-                @"INSERT INTO Transactions (TransactionId, Name, Email, Amount, TransactionDate, Timezone, Latitude, Longitude)
+            string sql = @"INSERT 
+                             INTO Transactions (TransactionId, Name, Email, Amount, TransactionDate, Timezone, Latitude, Longitude)
                            VALUES (@TransactionId, @Name, @Email, @Amount, @TransactionDate, @Timezone, @Latitude, @Longitude)";
 
             foreach (var transaction in transactions)
@@ -66,7 +66,7 @@ namespace TransactionManagement.DatabaseManager
             return existingTransactionIds.ToList();
         }
 
-        public async Task<List<Transaction>> GetTransactionsByDateAsync(int year, int? month, CancellationToken cancellationToken)
+        public async Task<List<Transaction>> GetTransactionsForClientTimeZoneAsync(int year, int? month, CancellationToken cancellationToken)
         {
             await using var connection = _sqlConnectionFactory.Create();
             await connection.OpenAsync(cancellationToken);
@@ -79,7 +79,7 @@ namespace TransactionManagement.DatabaseManager
 
             object queryParams;
 
-            if (month != null)
+            if (month is not null)
             {
                 sql += " AND MONTH(TransactionDate) = @Month";
                 queryParams = new { Year = year, Month = month };
@@ -93,6 +93,35 @@ namespace TransactionManagement.DatabaseManager
 
             return transactions.ToList();
         }
+
+        public async Task<List<Transaction>> GetTransactionsForCurrentTimeZoneAsync(string timeZone, int year, int? month, CancellationToken cancellationToken)
+        {
+            await using var connection = _sqlConnectionFactory.Create();
+            await connection.OpenAsync(cancellationToken);
+
+            var sql = @"SELECT TransactionId, Name, Email, Amount,
+                               FORMAT(TransactionDate AT TIME ZONE 'UTC' AT TIME ZONE Timezone, 'yyyy-MM-dd HH:mm:ss.ff') AS TransactionDate,
+                               Timezone, Latitude, Longitude 
+                          FROM Transactions 
+                         WHERE YEAR(TransactionDate) = @Year AND Timezone = @TimeZone";
+
+            object queryParams;
+
+            if (month is not null)
+            {
+                sql += " AND MONTH(TransactionDate) = @Month";
+                queryParams = new { Year = year, Month = month, TimeZone = timeZone };
+            }
+            else
+            {
+                queryParams = new { Year = year, TimeZone = timeZone };
+            }
+
+            var transactions = await connection.QueryAsync<Transaction>(sql, queryParams);
+
+            return transactions.ToList();
+        }
+
 
     }
 }

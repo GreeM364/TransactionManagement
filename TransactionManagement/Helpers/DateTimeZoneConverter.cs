@@ -18,6 +18,4 @@ namespace TransactionManagement.Helpers
             return TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, timezone);
         }
     }
-
-
 }

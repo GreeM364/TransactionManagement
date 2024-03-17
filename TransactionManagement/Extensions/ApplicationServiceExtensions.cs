@@ -32,6 +32,8 @@ namespace TransactionManagement.Extensions
 
             services.AddScoped<ITransactionService, TransactionService>();
             services.AddScoped<ITransactionManager, TransactionManager>();
+            services.AddScoped<IIpInfoService, IpInfoService>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             return services;
         }

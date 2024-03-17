@@ -28,14 +28,27 @@ namespace TransactionManagement.Controllers
             return StatusCode(StatusCodes.Status201Created, downloadedTransactionData);
         }
 
-        [HttpGet("getAll/Client/{year}/{month?}")]
+        [HttpGet("getAll/ClientTimeZone/{year}/{month?}")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(List<TransactionResponse>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetTransactions(int year, string? month = null, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetTransactionsForClientTimeZone(int year, string? month = null, CancellationToken cancellationToken = default)
         { 
-            var transactionsForDate = await _transactionService.GetTransactionsForDateAsync(year, month, cancellationToken);
+            var transactions = await _transactionService.GetTransactionsForClientTimeZoneAsync(year, month, cancellationToken);
 
-            return Ok(transactionsForDate);
+            return Ok(transactions);
         }
+
+        [HttpGet("getAll/CurrentTimeZone/{year}/{month?}")]
+        [Produces("application/json")]
+        [ProducesResponseType(typeof(List<TransactionResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetTransactionsForCurrentUserTimeZone(int year, string? month = null, CancellationToken cancellationToken = default)
+        {
+            string clientIp = HttpContext.Connection.RemoteIpAddress.ToString();
+
+            var transactions = await _transactionService.GetTransactionsForCurrentTimeZoneAsync(clientIp, year, month, cancellationToken);
+
+            return Ok(transactions);
+        }
+
     }
 }

@@ -11,10 +11,12 @@ namespace TransactionManagement.Services
     public class TransactionService : ITransactionService
     {
         private readonly ITransactionManager _transactionManager;
+        private readonly IIpInfoService _ipInfoService;
 
-        public TransactionService(ITransactionManager transactionManager)
+        public TransactionService(ITransactionManager transactionManager, IIpInfoService infoService)
         {
             _transactionManager = transactionManager;
+            _ipInfoService = infoService;
         }
 
         public async Task<List<TransactionResponse>> SaveAsync(IFormFile csvFile, CancellationToken cancellationToken)
@@ -38,11 +40,28 @@ namespace TransactionManagement.Services
             return transactionsResponse;
         }
 
-        public async Task<List<TransactionResponse>> GetTransactionsForDateAsync(int year, string? month, CancellationToken cancellationToken)
+        public async Task<List<TransactionResponse>> GetTransactionsForClientTimeZoneAsync(int year, string? month, CancellationToken cancellationToken)
         {
             var monthNumber = ParseMonth(month);
 
-            var transactions = await _transactionManager.GetTransactionsByDateAsync(year, monthNumber, cancellationToken);
+            var transactions = await _transactionManager.GetTransactionsForClientTimeZoneAsync(year, monthNumber, cancellationToken);
+
+            if (!transactions.Any())
+                return Enumerable.Empty<TransactionResponse>().ToList();
+
+            var transactionsResponse = Mapper.TransactionToTransactionResponse(transactions);
+
+            return transactionsResponse;
+        }
+
+        public async Task<List<TransactionResponse>> GetTransactionsForCurrentTimeZoneAsync(string clientIp, int year, string? month, CancellationToken cancellationToken)
+        {
+            var monthNumber = ParseMonth(month);
+
+            var currentTimeZone = await _ipInfoService.GetCurrentTimeZoneAsync(clientIp);
+            var standardCurrentTimeZone = TimeZoneHelper.ConvertIanaToWindows(currentTimeZone);
+
+            var transactions = await _transactionManager.GetTransactionsForCurrentTimeZoneAsync(standardCurrentTimeZone, year, monthNumber, cancellationToken);
 
             if (!transactions.Any())
                 return Enumerable.Empty<TransactionResponse>().ToList();
