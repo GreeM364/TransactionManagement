@@ -22,8 +22,24 @@ namespace TransactionManagement.Helpers
                 for (int columnIndex = 0; columnIndex < columnsToInclude.Count; columnIndex++)
                 {
                     var propertyName = columnsToInclude[columnIndex];
-                    var propertyValue = transaction.GetType().GetProperty(propertyName)?.GetValue(transaction, null)?.ToString();
-                    worksheet.Cell(rowIndex + 2, columnIndex + 1).Value = propertyValue;
+                    var property = transaction.GetType().GetProperty(propertyName);
+
+                    if (property != null)
+                    {
+                        var propertyValue = property.GetValue(transaction, null);
+                        if (property.PropertyType == typeof(DateTime))
+                        {
+                            worksheet.Cell(rowIndex + 2, columnIndex + 1).Value = (DateTime)propertyValue;
+                        }
+                        else if (property.PropertyType == typeof(decimal) || property.PropertyType == typeof(double))
+                        {
+                            worksheet.Cell(rowIndex + 2, columnIndex + 1).Value = Convert.ToDouble(propertyValue);
+                        }
+                        else
+                        {
+                            worksheet.Cell(rowIndex + 2, columnIndex + 1).Value = propertyValue?.ToString();
+                        }
+                    }
                 }
             }
 

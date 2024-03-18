@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using TransactionManagement.DatabaseManager.Interfaces;
 using TransactionManagement.Entities;
+using TransactionManagement.Exceptions;
 using TransactionManagement.Helpers;
 using TransactionManagement.Models.Requests;
 using TransactionManagement.Models.Responses;
@@ -42,9 +43,18 @@ namespace TransactionManagement.Services
 
         public async Task<byte[]> ExportAsync(ExportTransactionsRequest request, CancellationToken cancellationToken)
         {
+            if (request.StartDate > request.EndDate)
+                throw new BadRequestException("Start date cannot be greater than end date");
+
+            if (!request.IsAtLeastOneFieldIncluded())
+                throw new BadRequestException("At least one field must be included for export.");
+
             var columnsToInclude = GetColumnsToInclude(request);
 
             var transactions = await _transactionManager.GetTransactionsByDateAsync(request.StartDate, request.EndDate, columnsToInclude, cancellationToken);
+
+            if (transactions == null || transactions.Count == 0)
+                throw new NotFoundException("No transactions found for the given date range");
 
             var excelBytes = ExcelHelper.ExportToExcel(transactions, columnsToInclude);
 
@@ -53,6 +63,9 @@ namespace TransactionManagement.Services
 
         public async Task<List<TransactionResponse>> GetTransactionsForClientTimeZoneAsync(int year, string? month, CancellationToken cancellationToken)
         {
+            if (year < 1)
+                throw new BadRequestException("Year must be greater than or equal to 1.");
+
             var monthNumber = ParseMonth(month);
 
             var transactions = await _transactionManager.GetTransactionsForClientTimeZoneAsync(year, monthNumber, cancellationToken);
@@ -67,6 +80,9 @@ namespace TransactionManagement.Services
 
         public async Task<List<TransactionResponse>> GetTransactionsForCurrentTimeZoneAsync(string clientIp, int year, string? month, CancellationToken cancellationToken)
         {
+            if (year < 1)
+                throw new BadRequestException("Year must be greater than or equal to 1.");
+
             var monthNumber = ParseMonth(month);
 
             var currentTimeZone = await _ipInfoService.GetCurrentTimeZoneAsync(clientIp);
@@ -121,7 +137,7 @@ namespace TransactionManagement.Services
             {
                 if (!DateTime.TryParseExact(month, "MMMM", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedMonth))
                 {
-                    throw new ArgumentException("Invalid month format", nameof(month));
+                    throw new BadRequestException("Invalid month format. The month parameter should be a valid month name (e.g., January, February, etc.).");
                 }
 
                 return parsedMonth.Month;

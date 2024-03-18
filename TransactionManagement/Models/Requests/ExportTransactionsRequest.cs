@@ -11,5 +11,17 @@
         public bool IncludeTransactionDate { get; set; }
         public bool IncludeTimezone { get; set; }
         public bool IncludeLocation { get; set; }
+
+
+        public bool IsAtLeastOneFieldIncluded()
+        {
+            return IncludeTransactionId ||
+                   IncludeName ||
+                   IncludeEmail ||
+                   IncludeAmount ||
+                   IncludeTransactionDate ||
+                   IncludeTimezone ||
+                   IncludeLocation;
+        }
     }
 }
