@@ -27,7 +27,7 @@ namespace TransactionManagement.Services
 
             var transactionsToSave = Mapper.TransactionRequestCsvToTransaction(transactionsRequestScv);
 
-            var (insertedTransactions, updatedTransactions) = 
+            var (insertedTransactions, updatedTransactions) =
                 await SplitTransactionsAsync(transactionsToSave, cancellationToken);
 
             await Task.WhenAll(
@@ -40,13 +40,24 @@ namespace TransactionManagement.Services
             return transactionsResponse;
         }
 
+        public async Task<byte[]> ExportAsync(ExportTransactionsRequest request, CancellationToken cancellationToken)
+        {
+            var columnsToInclude = GetColumnsToInclude(request);
+
+            var transactions = await _transactionManager.GetTransactionsByDateAsync(request.StartDate, request.EndDate, columnsToInclude, cancellationToken);
+
+            var excelBytes = ExcelHelper.ExportToExcel(transactions, columnsToInclude);
+
+            return excelBytes;
+        }
+
         public async Task<List<TransactionResponse>> GetTransactionsForClientTimeZoneAsync(int year, string? month, CancellationToken cancellationToken)
         {
             var monthNumber = ParseMonth(month);
 
             var transactions = await _transactionManager.GetTransactionsForClientTimeZoneAsync(year, monthNumber, cancellationToken);
 
-            if (!transactions.Any())
+            if (transactions.Count == 0)
                 return Enumerable.Empty<TransactionResponse>().ToList();
 
             var transactionsResponse = Mapper.TransactionToTransactionResponse(transactions);
@@ -63,7 +74,7 @@ namespace TransactionManagement.Services
 
             var transactions = await _transactionManager.GetTransactionsForCurrentTimeZoneAsync(standardCurrentTimeZone, year, monthNumber, cancellationToken);
 
-            if (!transactions.Any())
+            if (transactions.Count == 0)
                 return Enumerable.Empty<TransactionResponse>().ToList();
 
             var transactionsResponse = Mapper.TransactionToTransactionResponse(transactions);
@@ -81,7 +92,7 @@ namespace TransactionManagement.Services
             return uniqueTransactions;
         }
 
-        private async Task<(List<Transaction> insertedTransactions, List<Transaction> updatedTransactions)> 
+        private async Task<(List<Transaction> insertedTransactions, List<Transaction> updatedTransactions)>
             SplitTransactionsAsync(List<Transaction> transactionsToSave, CancellationToken cancellationToken)
         {
             var insertedTransactions = new List<Transaction>();
@@ -117,6 +128,34 @@ namespace TransactionManagement.Services
             }
 
             return null;
+        }
+
+        private List<string> GetColumnsToInclude(ExportTransactionsRequest request)
+        {
+            var columnsToInclude = new List<string>();
+
+            if (request.IncludeTransactionId)
+                columnsToInclude.Add("TransactionId");
+
+            if (request.IncludeName)
+                columnsToInclude.Add("Name");
+
+            if (request.IncludeEmail)
+                columnsToInclude.Add("Email");
+
+            if (request.IncludeAmount)
+                columnsToInclude.Add("Amount");
+
+            if (request.IncludeTransactionDate)
+                columnsToInclude.Add("TransactionDate");
+
+            if (request.IncludeTimezone)
+                columnsToInclude.Add("Timezone");
+
+            if (request.IncludeLocation)
+                columnsToInclude.AddRange(new[] { "Latitude", "Longitude" });
+
+            return columnsToInclude;
         }
     }
 }

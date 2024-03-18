@@ -1,6 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 
-namespace TransactionManagement.Services
+namespace TransactionManagement.Persistence
 {
     public class SqlConnectionFactory
     {

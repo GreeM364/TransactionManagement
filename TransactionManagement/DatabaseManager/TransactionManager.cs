@@ -1,7 +1,7 @@
 ﻿using Dapper;
 using TransactionManagement.DatabaseManager.Interfaces;
 using TransactionManagement.Entities;
-using TransactionManagement.Services;
+using TransactionManagement.Persistence;
 
 namespace TransactionManagement.DatabaseManager
 {
@@ -122,6 +122,23 @@ namespace TransactionManagement.DatabaseManager
             return transactions.ToList();
         }
 
+        public async Task<List<Transaction>> GetTransactionsByDateAsync(DateTime startDate, DateTime endDate, List<string> columnsToInclude,
+            CancellationToken cancellationToken)
+        {
+            await using var connection = _sqlConnectionFactory.Create();
+            await connection.OpenAsync(cancellationToken);
 
+            var includedColumns = string.Join(", ", columnsToInclude.Select(c => $"[{c}]"));
+
+            var sql = $@"SELECT {includedColumns}
+                           FROM Transactions
+                          WHERE TransactionDate >= @StartDate AND TransactionDate <= @EndDate";
+
+            var queryParams = new { StartDate = startDate, EndDate = endDate };
+
+            var transactions = await connection.QueryAsync<Transaction>(sql, queryParams);
+
+            return transactions.ToList();
+        }
     }
 }

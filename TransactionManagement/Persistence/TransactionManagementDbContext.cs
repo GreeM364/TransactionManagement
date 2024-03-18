@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TransactionManagement.Entities;
 
-namespace TransactionManagement.Data
+namespace TransactionManagement.Persistence
 {
     /// <summary>
     /// Represents a database context for managing transactions.

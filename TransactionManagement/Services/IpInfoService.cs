@@ -8,7 +8,7 @@ namespace TransactionManagement.Services
     {
         private readonly string _token;
 
-        public IpInfoService( IConfiguration configuration)
+        public IpInfoService(IConfiguration configuration)
         {
             _token = configuration["IpInfo:Token"]!;
         }

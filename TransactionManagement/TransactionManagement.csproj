@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.102.2" />
     <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="GeoTimeZone" Version="5.3.0" />
     <PackageReference Include="IPinfo" Version="3.0.0" />

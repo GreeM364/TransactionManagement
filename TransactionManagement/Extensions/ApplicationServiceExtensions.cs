@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using TransactionManagement.Data;
 using TransactionManagement.DatabaseManager;
 using TransactionManagement.DatabaseManager.Interfaces;
+using TransactionManagement.Persistence;
 using TransactionManagement.Services;
 using TransactionManagement.Services.Interfaces;
 

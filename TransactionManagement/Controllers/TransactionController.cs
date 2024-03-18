@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using TransactionManagement.Models.Requests;
 using TransactionManagement.Models.Responses;
 using TransactionManagement.Services.Interfaces;
 
@@ -28,7 +29,7 @@ namespace TransactionManagement.Controllers
             return StatusCode(StatusCodes.Status201Created, downloadedTransactionData);
         }
 
-        [HttpGet("getAll/ClientTimeZone/{year}/{month?}")]
+        [HttpGet("getAll/ClientTimeZone/{year}")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(List<TransactionResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetTransactionsForClientTimeZone(int year, string? month = null, CancellationToken cancellationToken = default)
@@ -38,16 +39,29 @@ namespace TransactionManagement.Controllers
             return Ok(transactions);
         }
 
-        [HttpGet("getAll/CurrentTimeZone/{year}/{month?}")]
+        [HttpGet("getAll/CurrentTimeZone/{year}")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(List<TransactionResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetTransactionsForCurrentUserTimeZone(int year, string? month = null, CancellationToken cancellationToken = default)
         {
-            string clientIp = HttpContext.Connection.RemoteIpAddress.ToString();
+            string clientIp = HttpContext.Connection.RemoteIpAddress!.ToString();
 
             var transactions = await _transactionService.GetTransactionsForCurrentTimeZoneAsync(clientIp, year, month, cancellationToken);
 
             return Ok(transactions);
+        }
+
+        [HttpPost("export/excel")]
+        [Consumes("application/json")]
+        [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> ExportToExcel([FromBody] ExportTransactionsRequest request, CancellationToken cancellationToken = default)
+        {
+            var excelBytes = await _transactionService.ExportAsync(request, cancellationToken);
+
+            var stream = new MemoryStream(excelBytes);
+
+            return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "transactions.xlsx");
         }
 
     }
