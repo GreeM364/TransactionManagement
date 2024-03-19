@@ -20,7 +20,7 @@ namespace TransactionManagement.Controllers
         [HttpPost("upload")]
         [Consumes("multipart/form-data")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(TransactionResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(List<TransactionResponse>), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UploadCsv(IFormFile file, CancellationToken cancellationToken = default)
         {
@@ -29,9 +29,10 @@ namespace TransactionManagement.Controllers
             return StatusCode(StatusCodes.Status201Created, downloadedTransactionData);
         }
 
-        [HttpGet("getAll/ClientTimeZone/{year}")]
+        [HttpGet("GetAll/ClientTimeZone/{year}")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(List<TransactionResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetTransactionsForClientTimeZone(int year, string? month = null, CancellationToken cancellationToken = default)
         { 
             var transactions = await _transactionService.GetTransactionsForClientTimeZoneAsync(year, month, cancellationToken);
@@ -39,9 +40,10 @@ namespace TransactionManagement.Controllers
             return Ok(transactions);
         }
 
-        [HttpGet("getAll/CurrentTimeZone/{year}")]
+        [HttpGet("GetAll/CurrentTimeZone/{year}")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(List<TransactionResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetTransactionsForCurrentUserTimeZone(int year, string? month = null, CancellationToken cancellationToken = default)
         {
             string clientIp = HttpContext.Connection.RemoteIpAddress!.ToString();
@@ -55,6 +57,8 @@ namespace TransactionManagement.Controllers
         [Consumes("application/json")]
         [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ExportToExcel([FromBody] ExportTransactionsRequest request, CancellationToken cancellationToken = default)
         {
             var excelBytes = await _transactionService.ExportAsync(request, cancellationToken);

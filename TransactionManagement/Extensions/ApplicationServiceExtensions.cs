@@ -30,6 +30,8 @@ namespace TransactionManagement.Extensions
                 return new SqlConnectionFactory(connectionString);
             });
 
+            services.Configure<IpInfoOptions>(configuration.GetSection(nameof(IpInfoOptions)));
+
             services.AddScoped<ITransactionService, TransactionService>();
             services.AddScoped<ITransactionManager, TransactionManager>();
             services.AddScoped<IIpInfoService, IpInfoService>();

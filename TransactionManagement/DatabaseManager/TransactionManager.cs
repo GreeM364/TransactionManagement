@@ -75,13 +75,13 @@ namespace TransactionManagement.DatabaseManager
                                FORMAT(TransactionDate AT TIME ZONE 'UTC' AT TIME ZONE Timezone, 'yyyy-MM-dd HH:mm:ss.ff') AS TransactionDate,
                                Timezone, Latitude, Longitude 
                           FROM Transactions 
-                         WHERE YEAR(TransactionDate) = @Year";
+                         WHERE YEAR(TransactionDate AT TIME ZONE 'UTC' AT TIME ZONE Timezone) = @Year";
 
             object queryParams;
 
             if (month is not null)
             {
-                sql += " AND MONTH(TransactionDate) = @Month";
+                sql += " AND MONTH(TransactionDate AT TIME ZONE 'UTC' AT TIME ZONE Timezone) = @Month";
                 queryParams = new { Year = year, Month = month };
             }
             else
@@ -103,19 +103,21 @@ namespace TransactionManagement.DatabaseManager
                                FORMAT(TransactionDate AT TIME ZONE 'UTC' AT TIME ZONE Timezone, 'yyyy-MM-dd HH:mm:ss.ff') AS TransactionDate,
                                Timezone, Latitude, Longitude 
                           FROM Transactions 
-                         WHERE YEAR(TransactionDate) = @Year AND Timezone = @TimeZone";
+                         WHERE Timezone = @TimeZone
+                           AND YEAR(TransactionDate AT TIME ZONE 'UTC' AT TIME ZONE Timezone) = @Year";
 
             object queryParams;
 
             if (month is not null)
             {
-                sql += " AND MONTH(TransactionDate) = @Month";
+                sql += " AND MONTH(TransactionDate AT TIME ZONE 'UTC' AT TIME ZONE Timezone) = @Month";
                 queryParams = new { Year = year, Month = month, TimeZone = timeZone };
             }
             else
             {
                 queryParams = new { Year = year, TimeZone = timeZone };
             }
+
 
             var transactions = await connection.QueryAsync<Transaction>(sql, queryParams);
 

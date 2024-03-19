@@ -1,4 +1,5 @@
 using TransactionManagement.Extensions;
+using TransactionManagement.Middlewares;
 
 
 // Add services to the container.
@@ -14,6 +15,8 @@ builder.Services.AddApplicationServices(builder.Configuration);
 
 // Configure the HTTP request pipeline.
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {

@@ -1,6 +1,8 @@
 ﻿using IPinfo.Models;
 using IPinfo;
 using TransactionManagement.Services.Interfaces;
+using Microsoft.Extensions.Options;
+using TransactionManagement.Persistence;
 
 namespace TransactionManagement.Services
 {
@@ -8,9 +10,9 @@ namespace TransactionManagement.Services
     {
         private readonly string _token;
 
-        public IpInfoService(IConfiguration configuration)
+        public IpInfoService(IOptions<IpInfoOptions> options)
         {
-            _token = configuration["IpInfo:Token"]!;
+            _token = options.Value.Token;
         }
 
         public async Task<string> GetCurrentTimeZoneAsync(string clientIp)
