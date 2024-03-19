@@ -2,6 +2,9 @@
 
 namespace TransactionManagement.Middlewares
 {
+    /// <summary>
+    /// Middleware for handling exceptions and returning appropriate HTTP status codes.
+    /// </summary>
     public class ExceptionHandlingMiddleware
     {
         private readonly RequestDelegate _next;
@@ -11,6 +14,12 @@ namespace TransactionManagement.Middlewares
             _next = next;
         }
 
+        /// <summary>
+        /// Invokes the middleware.
+        /// </summary>
+        /// <param name="context">The HTTP context.</param>
+        /// <param name="logger">The logger.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task InvokeAsync(HttpContext context, ILogger<ExceptionHandlingMiddleware> logger)
         {
             try

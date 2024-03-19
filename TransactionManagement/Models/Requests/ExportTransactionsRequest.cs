@@ -1,5 +1,8 @@
 ﻿namespace TransactionManagement.Models.Requests
 {
+    /// <summary>
+    /// Request model for exporting transactions.
+    /// </summary>
     public class ExportTransactionsRequest
     {
         public DateTime StartDate { get; set; }
@@ -13,6 +16,10 @@
         public bool IncludeLocation { get; set; }
 
 
+        /// <summary>
+        /// Checks if at least one field is included for export.
+        /// </summary>
+        /// <returns>True if at least one field is included; otherwise, false.</returns>
         public bool IsAtLeastOneFieldIncluded()
         {
             return IncludeTransactionId ||

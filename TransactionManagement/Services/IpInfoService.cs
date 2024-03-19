@@ -6,6 +6,9 @@ using TransactionManagement.Persistence;
 
 namespace TransactionManagement.Services
 {
+    /// <summary>
+    /// Service for retrieving IP information.
+    /// </summary>
     public class IpInfoService : IIpInfoService
     {
         private readonly string _token;
@@ -15,6 +18,11 @@ namespace TransactionManagement.Services
             _token = options.Value.Token;
         }
 
+        /// <summary>
+        /// Retrieves the current time zone for the specified IP address.
+        /// </summary>
+        /// <param name="clientIp">The IP address of the client.</param>
+        /// <returns>The current time zone.</returns>
         public async Task<string> GetCurrentTimeZoneAsync(string clientIp)
         {
             IPResponse ipResponse = await GetIpDetailsAsync(clientIp);
@@ -22,6 +30,11 @@ namespace TransactionManagement.Services
             return ipResponse.Timezone;
         }
 
+        /// <summary>
+        /// Retrieves IP details asynchronously.
+        /// </summary>
+        /// <param name="clientIp">The IP address of the client.</param>
+        /// <returns>The IP details response.</returns>
         private async Task<IPResponse> GetIpDetailsAsync(string clientIp)
         {
             IPinfoClient client = new IPinfoClient.Builder()

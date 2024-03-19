@@ -6,18 +6,36 @@ using TransactionManagement.Models.Responses;
 
 namespace TransactionManagement.Helpers
 {
+    /// <summary>
+    /// Provides methods for mapping between different transaction-related models.
+    /// </summary>
     public static class Mapper
     {
+        /// <summary>
+        /// Converts a list of TransactionRequestCsv objects to a list of Transaction objects.
+        /// </summary>
+        /// <param name="transactionsRequestScv">The list of TransactionRequestCsv objects to convert.</param>
+        /// <returns>A list of Transaction objects.</returns>
         public static List<Transaction> TransactionRequestCsvToTransaction(List<TransactionRequestCsv> transactionsRequestScv)
         {
             return transactionsRequestScv.Select(TransactionRequestCsvToTransaction).ToList();
         }
 
+        /// <summary>
+        /// Converts a list of Transaction objects to a list of TransactionResponse objects.
+        /// </summary>
+        /// <param name="transactions">The list of Transaction objects to convert.</param>
+        /// <returns>A list of TransactionResponse objects.</returns>
         public static List<TransactionResponse> TransactionToTransactionResponse(List<Transaction> transactions)
         {
             return transactions.Select(TransactionToTransactionResponse).ToList();
         }
 
+        /// <summary>
+        /// Converts a TransactionRequestCsv object to a Transaction object.
+        /// </summary>
+        /// <param name="transactionRequestScv">The TransactionRequestCsv object to convert.</param>
+        /// <returns>A Transaction object.</returns>
         public static Transaction TransactionRequestCsvToTransaction(TransactionRequestCsv transactionRequestScv)
         {
             var (latitude, longitude) = GetLocationCoordinates(transactionRequestScv.client_location);
@@ -38,6 +56,11 @@ namespace TransactionManagement.Helpers
             };
         }
 
+        /// <summary>
+        /// Converts a Transaction object to a TransactionResponse object.
+        /// </summary>
+        /// <param name="transaction">The Transaction object to convert.</param>
+        /// <returns>A TransactionResponse object.</returns>
         public static TransactionResponse TransactionToTransactionResponse(Transaction transaction)
         {
             return new TransactionResponse

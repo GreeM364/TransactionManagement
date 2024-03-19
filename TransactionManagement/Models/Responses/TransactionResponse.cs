@@ -1,5 +1,8 @@
 ﻿namespace TransactionManagement.Models.Responses
 {
+    /// <summary>
+    /// Response model for transaction data.
+    /// </summary>
     public class TransactionResponse
     {
         public string TransactionId { get; set; } = null!;

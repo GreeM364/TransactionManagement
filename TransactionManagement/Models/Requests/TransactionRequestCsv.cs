@@ -1,5 +1,8 @@
 ﻿namespace TransactionManagement.Models.Requests
 {
+    /// <summary>
+    /// A model that represents columns in a CSV file.
+    /// </summary>
     public class TransactionRequestCsv
     {
         public string transaction_id { get; set; }

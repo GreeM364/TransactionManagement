@@ -13,11 +13,11 @@ namespace TransactionManagement.Extensions
     public static class ApplicationServiceExtensions
     {
         /// <summary>
-        /// Adds application services to the specified IServiceCollection.
+        /// Adds application services to the specified <see cref="IServiceCollection"/>.
         /// </summary>
-        /// <param name="services">The IServiceCollection to add services to.</param>
+        /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
         /// <param name="configuration">The configuration options.</param>
-        /// <returns>The modified IServiceCollection.</returns>
+        /// <returns>The modified <see cref="IServiceCollection"/>.</returns>
         public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<TransactionManagementDbContext>(options =>

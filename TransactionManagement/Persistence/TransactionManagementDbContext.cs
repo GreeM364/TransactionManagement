@@ -8,10 +8,6 @@ namespace TransactionManagement.Persistence
     /// </summary>
     public class TransactionManagementDbContext : DbContext
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TransactionManagementDbContext"/> class.
-        /// </summary>
-        /// <param name="options">The options for the context.</param>
         public TransactionManagementDbContext(DbContextOptions<TransactionManagementDbContext> options) : base(options)
         { }
 
