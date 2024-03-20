@@ -43,62 +43,45 @@ namespace TransactionManagement.Helpers
         /// Parses a single line of CSV data into an array of fields.
         /// </summary>
         /// <param name="line">The CSV line to parse.</param>
+        /// <param name="delimiter">The character used to delimit fields in the CSV line. Default is ','.</param>
+        /// <param name="shield">The character used to shield fields containing the delimiter character. Default is '\"'.</param>
         /// <returns>An array of fields parsed from the CSV line.</returns>
-        private static string[] ParseCsvLine(string line)
+        private static string[] ParseCsvLine(string line, char delimiter = ',', char shield = '"')
         {
             List<string> fields = new List<string>();
             StringBuilder currentField = new StringBuilder();
             bool insideQuotes = false;
 
-            // Check if the string starts with double quotes
-            bool startWithQuote = line.StartsWith("\"");
-            int startIndex = startWithQuote ? 1 : 0;
+            // Initialize the indexes of the beginning and end of the line
+            int startIndex = line.StartsWith(shield) ? 1 : 0;
+            int endIndex = line.EndsWith(shield) ? line.Length - 1 : line.Length;
 
-            for (int i = startIndex; i < line.Length; i++)
+            for (int i = startIndex; i < endIndex; i++)
             {
                 char c = line[i];
 
-                if (c == '"')
+                if (c == shield)
                 {
                     insideQuotes = !insideQuotes;
 
-                    // If they are double quotes and we are not in the middle of the data, we skip them
-                    if (i == 0 && startWithQuote)
-                        continue;
-
-                    // If these are double quotes inside the data, just add them to the current field
-                    if (insideQuotes && i < line.Length - 1 && line[i + 1] == '"')
+                    // If these are consecutive screen characters, add one screen since it is our data
+                    if (line[i + 1] == shield)
                     {
                         currentField.Append(c);
-                        i++; // Skip the next character because we've already processed it
-                        continue;
-                    }
-
-                    // If these are the last double quotes and we are at the end of the line, remove them
-                    if (insideQuotes && i == line.Length - 1)
-                    {
-                        continue;
+                        i++; // Skip the next screen since we've already processed it
                     }
                 }
-                // If it's a comma and we're not inside double quotes, then we add the current field to the list of fields
-                else if (c == ',' && !insideQuotes)
+                // If this is a split character and we're not inside the screen, add the current field to the list
+                else if (c == delimiter && !insideQuotes)
                 {
                     fields.Add(currentField.ToString());
                     currentField.Clear();
-                    continue;
                 }
-
-                currentField.Append(c);
+                else
+                    currentField.Append(c);
             }
 
             fields.Add(currentField.ToString());
-
-            // Remove the closing quotation marks, if they are at the end of the line
-            for (int i = 0; i < fields.Count; i++)
-            {
-                if (fields[i].EndsWith("\""))
-                    fields[i] = fields[i].Substring(0, fields[i].Length - 1);
-            }
 
             return fields.ToArray();
         }
